@@ -201,7 +201,33 @@ unsigned floatScale2(unsigned uf) {
  *   Difficulty: 3
  */
 int float64_f2i(unsigned uf1, unsigned uf2) {
-    return 2;
+    int S = uf2 >> 31;
+    int E = uf2 << 1 >> 21;
+    E = ~(~E | (1 << 31 >> 20)); // 防止变成负数
+    int M1 = uf2 << 12 >> 12;
+
+    int result;
+    if (!E) result = 0; // 非规约形式直接返回0
+    else {
+        E = E - 1023;
+        if (E < 0) result = 0;
+        else if (E + 1 > 31) result = 0x80000000; // overflow
+        else {
+            result = (1 << 20) | M1;
+            if (20 >= E) {
+                result = result >> (20-E);
+            } else {
+                int remain = E - 20;
+                result = result << remain;
+                int mask = 0x80000000 >> (remain-1);
+                int M2 = mask & uf1;
+                result = result | M2;
+            }
+            if (S) result = -result;
+        }
+    }
+
+    return result;
 }
 
 /*
