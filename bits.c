@@ -19,7 +19,7 @@
  * Difficulty: 1
  */
 int bitAnd(int x, int y) {
-    return 2;
+    return ~( ~x | ~y);
 }
 
 /*
@@ -30,7 +30,7 @@ int bitAnd(int x, int y) {
  *   Difficulty: 1
  */
 int bitXor(int x, int y) {
-    return 2;
+    return ~( x & y ) & ~( ~x & ~y );
 }
 
 /*
@@ -50,7 +50,11 @@ int bitXor(int x, int y) {
  *   1 if x and y have the same sign , 0 otherwise.
  */
 int samesign(int x, int y) {
-    return 2;
+    if ((x^0) && (y^0)) { // 过滤含 0 情况
+        return !((x >> 31) ^ (y >> 31)); // 依据符号位判断
+    } else {
+        return !(x^y); // 过滤都为 0 情况
+    }
 }
 
 /*
@@ -76,7 +80,30 @@ int logtwo(int v) {
  *    Difficulty: 2
  */
 int byteSwap(int x, int n, int m) {
-    return 2;
+
+    // 位移量
+    int N = n << 3;
+    int M = m << 3;
+
+    // 掩码
+    int mask_n = 255 << N;
+    int mask_m = 255 << M;
+
+    int mask = mask_n | mask_m;
+
+    // 过滤
+    int result = x ^ (x & mask);
+
+    int nth_byte = x & mask_n;
+    int mth_byte = x & mask_m;
+
+    // 换位
+    nth_byte = (nth_byte >> N) << M;
+    mth_byte = (mth_byte >> M) << N;
+
+    result = result | (nth_byte & mask_m) | (mth_byte & mask_n);
+
+    return result;
 }
 
 /*
@@ -88,7 +115,21 @@ int byteSwap(int x, int n, int m) {
  *   Difficulty: 3
  */
 unsigned reverse(unsigned v) {
-    return 2;
+    unsigned result = 0;
+
+    for (int i=0; i-16; i++) {
+        unsigned mask_r = 1 << i;
+        unsigned mask_l = 1 << (31 - i);
+
+        unsigned r = v & mask_r;
+        unsigned l = v & mask_l;
+
+        r = (r >> i) << (31 - i);
+        l = (l >> (31 - i)) << i;
+
+        result = result | r | l;
+    }
+    return result;
 }
 
 /*
@@ -100,7 +141,11 @@ unsigned reverse(unsigned v) {
  *   Difficulty: 3
  */
 int logicalShift(int x, int n) {
-    return 2;
+    int mask = x >> 31 << 31 >> n << 1;
+
+    int result = x >> n;
+
+    return result ^ mask;
 }
 
 /*
