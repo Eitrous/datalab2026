@@ -184,7 +184,20 @@ unsigned float_i2f(int x) {
  *   Difficulty: 4
  */
 unsigned floatScale2(unsigned uf) {
-    return 2;
+    int mask_e = 255 << 23;
+    int mask_m = ~(1 << 31 >> 8);
+    int mask_s = 1 << 31;
+
+    int S = uf & mask_s;
+    int E = uf & mask_e;
+    int M = uf & mask_m;
+
+    if (E == mask_e) return uf; // uf为 NaN
+    if (E == 0) M <<= 1; // 非规约
+    else E = ((E >> 23) + 1) << 23;
+
+    int result = S | E | M;
+    return result;
 }
 
 /*
