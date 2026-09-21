@@ -244,5 +244,10 @@ int float64_f2i(unsigned uf1, unsigned uf2) {
  *   Difficulty: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    int result;
+    if (x < -149) result = 0; // 太小
+    else if (x <= -127) result = 1 << (22 + x + 127); // 非规约
+    else if (x <= 127) result = (x + 127) << 23; // 规约
+    else result = 0x7f800000; // 太大
+    return result;
 }
