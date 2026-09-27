@@ -225,7 +225,7 @@ unsigned float_i2f(int x) {
     E <<= 23;
     return S + E + M;
 }
-//1011111100000000000000000
+
 /*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
