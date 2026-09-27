@@ -67,7 +67,17 @@ int samesign(int x, int y) {
  *   Difficulty: 4
  */
 int logtwo(int v) {
-    return 2;
+    int b16 = v >= (1 << 16);
+    v >>= (b16 << 4);
+    int b8 = v >= (1 << 8);
+    v >>= (b8 << 3);
+    int b4 = v >= (1 << 4);
+    v >>= (b4 << 2);
+    int b2 = v >= (1 << 2);
+    v >>= (b2 << 1);
+    int b1 = v >= 2;
+    int result = (b16 << 4) | (b8 << 3) | (b4 << 2) | (b2 << 1) | b1;
+    return result;
 }
 
 /*
@@ -157,7 +167,23 @@ int logicalShift(int x, int n) {
  *   Difficulty: 4
  */
 int leftBitCount(int x) {
-    return 2;
+    int y = ~x;
+    y |= y >> 1;
+    y |= y >> 2;
+    y |= y >> 4;
+    y |= y >> 8;
+    y |= y >> 16;
+    y = ~y;
+
+    int mask = 0x11111111;
+    int cnt = (y & mask) + ((y >> 1) & mask) + ((y >> 2) & mask) + ((y >> 3) & mask);
+    mask = 0x0000ffff;
+    cnt = (cnt & mask) + ((cnt & (mask << 16)) >> 16);
+    mask = 0x00000f0f;
+    cnt = (cnt & mask) + ((cnt & (mask << 4)) >> 4);
+    mask = 0x000000ff;
+    cnt = (cnt & mask) + ((cnt & (mask << 8)) >> 8);
+    return cnt;
 }
 
 /*
@@ -169,9 +195,37 @@ int leftBitCount(int x) {
  *   Difficulty: 4
  */
 unsigned float_i2f(int x) {
-    return 2;
-}
+    if (x == 0) return 0;
+    if (x == 0x80000000) return 0xcf000000;
+    //printf("---\nx=%b\n", x);
+    int E = 126, S = (x >> 31 << 31);
+    if (S) x = -x;
+    int x1 = x;
+    // printf("S=%d, x=%d\n", S, x);
+    while (x1 != 0) {
+        ++E;
+        x1 >>= 1;
+    }
 
+    int mask = 0x007fffff, M;
+    int L = E - 127 - 23;
+    if (L <= 0) {
+        M = (x << -L) & mask;
+    } else {
+        M = (x >> L) & mask;
+        int R = x & ((1 << L) - 1);
+        mask = 1 << (L - 1);
+        if (R > mask) ++M;
+        if (R == mask) {
+            if (M & 1) ++M;
+        }
+    }
+
+    //printf("S=%d, E=%d, M=%d\n", S, E, M);
+    E <<= 23;
+    return S + E + M;
+}
+//1011111100000000000000000
 /*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
